@@ -106,6 +106,12 @@
 						"internalType": "address",
 						"name": "paymaster",
 						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "reference_id",
+						"type": "bytes32"
 					}
 				],
 				"name": "Claimed",
@@ -175,6 +181,12 @@
 						"internalType": "uint256",
 						"name": "amount",
 						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "bytes32",
+						"name": "reference_id",
+						"type": "bytes32"
 					}
 				],
 				"name": "Penalty",
@@ -234,6 +246,11 @@
 						"internalType": "address",
 						"name": "_paymaster",
 						"type": "address"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "reference_id",
+						"type": "bytes32"
 					},
 					{
 						"internalType": "bytes",
@@ -315,6 +332,11 @@
 						"internalType": "uint256",
 						"name": "amount",
 						"type": "uint256"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "reference_id",
+						"type": "bytes32"
 					}
 				],
 				"name": "penalty",
@@ -537,11 +559,11 @@
 			]
 		},
 		"contracts/NodeReward.sol": {
-			"keccak256": "0xf409ddd93a57a926b3744b1e9d6504e660176d902ca25e38b6a870ec26ca26d5",
+			"keccak256": "0x61211465e552e807f7aa79b248e076dfa3731a8516825855744c0fa283082475",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://d68b8d87b3914bccbf807486f1f2f7d29ee1f38d8596d927a16704fde45ad78c",
-				"dweb:/ipfs/QmaHukFN9x5jdqReXh9WFodzNaGppa2sYEcJrMNWQnRDXm"
+				"bzz-raw://0aa407a15486b07ffb69ad504616377596eb27d2bb5edb24fabe31d5bb11adf5",
+				"dweb:/ipfs/QmcvyStRWurAUxDpaXDSLbwtbG2MsZcYnpcuEzSCJa924H"
 			]
 		}
 	},

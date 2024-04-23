@@ -22,9 +22,9 @@ contract CheckerReward is Ownable {
     mapping(uint256 => uint256) public withdrawAmounts;
 
     event PaymasterChanged(address indexed sender, address indexed paymaster, bool enabled);
-    event Claimed(address indexed sender, uint256 token_id, uint256 amount, address indexed paymaster);
+    event Claimed(address indexed sender, uint256 token_id, uint256 amount, address indexed paymaster, bytes32 reference_id);
     event Withdraw(address indexed sender, uint256 token_id, uint256 amount);
-    event Penalty(address indexed paymaster, uint256 token_id, uint256 amount);
+    event Penalty(address indexed paymaster, uint256 token_id, uint256 amount, bytes32 reference_id);
     
 
     constructor(address initialOwner, address checkerLicenseAddress, address cKIP_token, address fundAddress) Ownable(initialOwner) {
@@ -42,15 +42,15 @@ contract CheckerReward is Ownable {
         fund_address = _address;
     }
 
-    function claim(uint256 token_id, uint256 amount, address _paymaster, bytes memory signature) external {
+    function claim(uint256 token_id, uint256 amount, address _paymaster, bytes32 reference_id, bytes memory signature) external {
         require(amount>0, "Amount can't be zero");    
         require(paymaster[_paymaster], "You are't paymaster");    
         require(license_nft.ownerOf(token_id) == _msgSender(), "Caller is not the token owner");
-        bytes32 message = keccak256(abi.encode(claimedAmounts[token_id],token_id, amount, _msgSender()));
+        bytes32 message = keccak256(abi.encode(claimedAmounts[token_id],token_id, amount, _msgSender(), reference_id));
         address recoveredAddress = message.recover(signature);
         require(recoveredAddress == _paymaster, "Invalid Signature");
         claimedAmounts[token_id] += amount;
-        emit Claimed(_msgSender(), token_id, amount, _paymaster);
+        emit Claimed(_msgSender(), token_id, amount, _paymaster, reference_id);
     }
 
     function withdraw(uint256 token_id, uint256 amount) external {
@@ -64,10 +64,10 @@ contract CheckerReward is Ownable {
         emit Withdraw(_msgSender(), token_id, amount);
     }
 
-    function penalty(uint256 token_id, uint256 amount) external {
+    function penalty(uint256 token_id, uint256 amount, bytes32 reference_id) external {
         require(paymaster[_msgSender()], "You are't paymaster");
         require(amount>0, "Amount can't be zero");
         fines[token_id] += amount;
-        emit Penalty(_msgSender(), token_id, amount);
+        emit Penalty(_msgSender(), token_id, amount, reference_id);
     }
 }
