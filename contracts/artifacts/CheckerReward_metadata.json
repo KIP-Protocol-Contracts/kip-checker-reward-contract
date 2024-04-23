@@ -123,6 +123,31 @@
 					{
 						"indexed": true,
 						"internalType": "address",
+						"name": "sender",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "token_id",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "delegation",
+						"type": "address"
+					}
+				],
+				"name": "DelegationChanged",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
 						"name": "previousOwner",
 						"type": "address"
 					},
@@ -283,8 +308,46 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "delegations",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "fund_address",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "token_id",
+						"type": "uint256"
+					}
+				],
+				"name": "getDelegation",
 				"outputs": [
 					{
 						"internalType": "address",
@@ -347,6 +410,24 @@
 			{
 				"inputs": [],
 				"name": "renounceOwnership",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "token_id",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "_address",
+						"type": "address"
+					}
+				],
+				"name": "setDelegation",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -559,11 +640,11 @@
 			]
 		},
 		"contracts/NodeReward.sol": {
-			"keccak256": "0x61211465e552e807f7aa79b248e076dfa3731a8516825855744c0fa283082475",
+			"keccak256": "0x47fa4786ff811902d6887e2674c27fe2bb727d579827e7bb3e88df2e458d11cd",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://0aa407a15486b07ffb69ad504616377596eb27d2bb5edb24fabe31d5bb11adf5",
-				"dweb:/ipfs/QmcvyStRWurAUxDpaXDSLbwtbG2MsZcYnpcuEzSCJa924H"
+				"bzz-raw://6839b9cec4c388814eae136990606d66033d6d1698a57765474631ccfbd826aa",
+				"dweb:/ipfs/QmXUbbno78FUQLrEQryTbNNiyfveLvfTP3xLiWFbxzCMyd"
 			]
 		}
 	},

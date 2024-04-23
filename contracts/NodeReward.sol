@@ -20,8 +20,10 @@ contract CheckerReward is Ownable {
     mapping(uint256 => uint256) private fines;
     mapping(uint256 => uint256) public claimedAmounts;
     mapping(uint256 => uint256) public withdrawAmounts;
+    mapping(uint256 => address) public delegations;
 
     event PaymasterChanged(address indexed sender, address indexed paymaster, bool enabled);
+    event DelegationChanged(address indexed sender, uint256 token_id, address indexed delegation);
     event Claimed(address indexed sender, uint256 token_id, uint256 amount, address indexed paymaster, bytes32 reference_id);
     event Withdraw(address indexed sender, uint256 token_id, uint256 amount);
     event Penalty(address indexed paymaster, uint256 token_id, uint256 amount, bytes32 reference_id);
@@ -31,6 +33,16 @@ contract CheckerReward is Ownable {
         license_nft = IERC721(checkerLicenseAddress);
         cKIP = IERC20(cKIP_token);
         fund_address = fundAddress;
+    }
+
+    function getDelegation(uint256 token_id) public view returns (address)  {
+        return delegations[token_id];
+    }
+
+    function setDelegation(uint256 token_id, address _address) external {
+        require(license_nft.ownerOf(token_id) == _msgSender(), "Caller is not the token owner");
+        delegations[token_id] = _address;
+        emit DelegationChanged(_msgSender(), token_id, _address);
     }
 
     function setPaymaster(address _address, bool enabled) external onlyOwner {
