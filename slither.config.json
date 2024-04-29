@@ -1,0 +1,9 @@
+{
+    "solc_remaps": [
+        "@openzeppelin=.deps/npm/@openzeppelin"
+    ],
+    "filter_paths": "contracts/mocks,.deps/,node_modules/",
+    "compile_force_framework": "hardhat",
+    "exclude_informational": true,
+    "detectors_to_exclude": "arbitrary-send-erc20,missing-zero-check,timestamp,immutable-states"
+}

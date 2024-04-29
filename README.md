@@ -11,3 +11,12 @@ Once claimed, earnings can be immediately withdrawn, but withdrawals must be spa
 We also have a penalty function reserved for cases where a node is found to be violating rules or not working diligently, allowing us to impose fines.
 
 Earnings for each node are credited to the corresponding token ID. When a token owner transfers their token, the new token owner can manage these earnings.
+
+## Development
+
+```
+npm ci
+npx hardhat clean
+npx compile
+slither . --hardhat-artifacts-directory build/artifacts
+```
