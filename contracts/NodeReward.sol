@@ -33,7 +33,7 @@ contract NodeReward is Ownable {
     event DelegationChanged(uint256 tokenId, address indexed delegation);
     event Claimed(uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId);
     event Withdraw(uint256 tokenId, uint256 amount);
-    event PenaltyChanged(uint256 tokenId, uint256 amount, bytes32 referenceId);
+    event Penalty(uint256 tokenId, uint256 amount, bytes32 referenceId);
     
     constructor(address initialOwner, address kipNodeAddress, address cKIPToken, address _fundAddress) Ownable(initialOwner) {
         kipNode = IERC721(kipNodeAddress);
@@ -97,6 +97,6 @@ contract NodeReward is Ownable {
         if (paymaster[_msgSender()] == false) revert InvalidPayMaster();
 
         fines[tokenId] += amount;
-        emit PenaltyChanged(tokenId, amount, referenceId);
+        emit Penalty(tokenId, amount, referenceId);
     }
 }

@@ -1,0 +1,31 @@
+name: Scan vulnerabilities and run tests
+on: [push]
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: crytic/slither-action@v0.3.2
+        with:
+          node-version: 20.10.0
+          slither-config: "slither.config.json"
+          slither-version: 0.10.1
+        
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install packages
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.10.0
+      - run: yarn
+        shell: bash
+
+      - run: yarn hardhat test
+        env:
+          REPORT_GAS: true
+
+      - name: Coverage
+        run: yarn hardhat coverage && yarn istanbul check-coverage --statements 90 --branches 90 --functions 90 --lines 90
