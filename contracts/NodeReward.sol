@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 error AmountIsZero();
 error InvalidTokenOwner();
@@ -13,8 +14,11 @@ error InvalidSignature();
 error CanNotWithdrawYet();
 error InvalidAmount();
 
+import "hardhat/console.sol";
+
 contract NodeReward is Ownable {
     using ECDSA for bytes32;
+    using MessageHashUtils for bytes32;
 
     IERC721 public kipNode;
     IERC20 public cKIP;
@@ -30,10 +34,10 @@ contract NodeReward is Ownable {
     mapping(uint256 => address) public delegations;
 
     event PaymasterChanged(address indexed paymaster, bool enabled);
-    event DelegationChanged(uint256 tokenId, address indexed delegation);
-    event Claimed(uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId);
-    event Withdraw(uint256 tokenId, uint256 amount);
-    event Penalty(uint256 tokenId, uint256 amount, bytes32 referenceId);
+    event DelegationChanged(address indexed tokenOwner, uint256 tokenId, address indexed delegation);
+    event Claimed(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId);
+    event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount);
+    event Penalty(address indexed paymaster, uint256 tokenId, uint256 amount, bytes32 referenceId);
     
     constructor(address initialOwner, address kipNodeAddress, address cKIPToken, address _fundAddress) Ownable(initialOwner) {
         kipNode = IERC721(kipNodeAddress);
@@ -48,7 +52,7 @@ contract NodeReward is Ownable {
     function setDelegation(uint256 tokenId, address _address) external {
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
         delegations[tokenId] = _address;
-        emit DelegationChanged(tokenId, _address);
+        emit DelegationChanged(_msgSender(), tokenId, _address);
     }
 
     function setPaymaster(address _address, bool enabled) external onlyOwner {
@@ -65,11 +69,15 @@ contract NodeReward is Ownable {
         if (paymaster[_paymaster] == false) revert InvalidPayMaster();
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
         bytes32 message = keccak256(abi.encode(claimedAmounts[tokenId], tokenId, amount, _msgSender(), referenceId));
+        console.log("message");
+        console.logBytes32(message);
+        console.log("signed prefixed message");
+        console.logBytes32(message.toEthSignedMessageHash());
         address recoveredAddress = message.recover(signature);
         if (recoveredAddress != _paymaster) revert InvalidSignature();
         
         claimedAmounts[tokenId] += amount;
-        emit Claimed(tokenId, amount, _paymaster, referenceId);
+        emit Claimed(_msgSender(), tokenId, amount, _paymaster, referenceId);
     }
 
     function withdraw(uint256 tokenId, uint256 amount) external {
@@ -88,7 +96,7 @@ contract NodeReward is Ownable {
         lastWithdrawTime[tokenId] = block.timestamp;
         withdrawAmounts[tokenId] += amount;
         
-        emit Withdraw(tokenId, amount);
+        emit Withdraw(_msgSender(), tokenId, amount);
         require(cKIP.transferFrom(fundAddress, _msgSender(), amount), "Transfer failed");
     }
 
@@ -97,6 +105,6 @@ contract NodeReward is Ownable {
         if (paymaster[_msgSender()] == false) revert InvalidPayMaster();
 
         fines[tokenId] += amount;
-        emit Penalty(tokenId, amount, referenceId);
+        emit Penalty(_msgSender(), tokenId, amount, referenceId);
     }
 }
