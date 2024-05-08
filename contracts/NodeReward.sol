@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+// import "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import "./EIP712Paymaster.sol";
 
 error AmountIsZero();
@@ -19,7 +19,7 @@ error InvalidAmount();
 
 contract NodeReward is EIP712Paymaster {
     using ECDSA for bytes32;
-    using MessageHashUtils for bytes32;
+    // using MessageHashUtils for bytes32;
 
     IERC721 public kipNode;
     IERC20 public cKIP;
