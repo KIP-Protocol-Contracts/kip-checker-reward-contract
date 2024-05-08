@@ -38,6 +38,7 @@ describe("NodeReward testing", () => {
             await kipNode.getAddress(),
             await ckip.getAddress(),
             await fundAddress.getAddress(),
+            await payMaster.getAddress(),
         );
     });
 
@@ -210,26 +211,31 @@ describe("NodeReward testing", () => {
 
         it("Should claim correctly", async () => {
             const tokenId = "1";
-            const amount = "10";
-            const message = ethers.keccak256(encoder.encode(
-                ["uint256", "uint256", "uint256", "address", "bytes32"],
-                ["0", tokenId, amount, tokenOwner.address, ethers.encodeBytes32String("foo")]
-            ));
+            const amounT = "10";
+			const domain = {
+				name: "KIPNODEREWARD",
+				version: "1",
+			};
+			const types = {
+			Claim: [{ name: "claimed", type: "uint256" }, { name: "token_id", type: "uint256" }, { name: "amount", type: "uint256" }, { name: "sender", type: "address" }, { name: "reference_id", type: "bytes32" }],
+			};
 
-            const signature = await payMaster.signMessage(message);
-            console.log("message", message);
-            console.log("signed prefixed message", ethers.hashMessage(message))
-            console.log(`payment master ${payMaster.address} = recovered`, ethers.recoverAddress(ethers.hashMessage(message), signature));
-            // console.log("signature", signature);
+			const signature = await payMaster.signTypedData(domain, types, {
+				claimed: "0",
+				token_id: tokenId,
+				amount: amounT,
+				sender: tokenOwner.address,
+				reference_id: ethers.encodeBytes32String("foo"),
+			});
             await expect(
                 nodeReward.connect(tokenOwner).claim(
                     tokenId,
-                    amount,
+                    amounT,
                     payMaster.address,
                     ethers.encodeBytes32String("foo"),
                     signature,
                 )
-            ).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amount, payMaster.address, ethers.encodeBytes32String("foo"));
+            ).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, ethers.encodeBytes32String("foo"));
         });
     })
 });
