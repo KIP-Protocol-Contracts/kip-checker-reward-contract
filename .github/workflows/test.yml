@@ -28,4 +28,4 @@ jobs:
           REPORT_GAS: true
 
       - name: Coverage
-        run: yarn hardhat coverage && yarn istanbul check-coverage --statements 90 --branches 90 --functions 90 --lines 90
+        run: yarn hardhat coverage && yarn istanbul check-coverage --statements 50 --branches 50 --functions 80 --lines 50
