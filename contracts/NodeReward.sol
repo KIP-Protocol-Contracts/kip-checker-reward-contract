@@ -99,7 +99,7 @@ contract NodeReward is EIP712Paymaster {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(WITHDRAW_HASH, claimedAmounts[tokenId], tokenId, amount, _msgSender(), referenceId))
+                keccak256(abi.encode(WITHDRAW_HASH, withdrawAmounts[tokenId], tokenId, amount, _msgSender(), referenceId))
             )
         );
         address recoveredAddress = digest.recover(signature);
