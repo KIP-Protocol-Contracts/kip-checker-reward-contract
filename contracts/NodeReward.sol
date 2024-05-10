@@ -91,7 +91,7 @@ contract NodeReward is EIP712Paymaster {
             }
         }
 
-        if (claimedAmounts[tokenId]-fines[tokenId] <= withdrawAmounts[tokenId]+amount) {
+        if (claimedAmounts[tokenId]-fines[tokenId] < withdrawAmounts[tokenId]+amount) {
             revert InvalidAmount();
         }
 
