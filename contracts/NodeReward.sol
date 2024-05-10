@@ -86,7 +86,7 @@ contract NodeReward is EIP712Paymaster {
         if (paymaster[_paymaster] == false) revert InvalidPayMaster();
         if (amount == 0) revert AmountIsZero();
         if (lastWithdrawTime[tokenId] != 0) {
-            if (lastWithdrawTime[tokenId]+WITHDRAW_INTERVAL <= block.timestamp) {
+            if (lastWithdrawTime[tokenId]+WITHDRAW_INTERVAL > block.timestamp) {
                 revert CanNotWithdrawYet();
             }
         }
