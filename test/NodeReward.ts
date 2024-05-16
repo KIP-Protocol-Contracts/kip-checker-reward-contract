@@ -153,6 +153,7 @@ describe("NodeReward testing", () => {
         let tokenOwner: HardhatEthersSigner;
         let nonTokenOwner: HardhatEthersSigner;
         const encoder = ethers.AbiCoder.defaultAbiCoder();
+        const expirationTime = 1815874858;
 
         beforeEach(async () => {
             [falsyPayMaster, tokenOwner, nonTokenOwner] = await ethers.getSigners();
@@ -168,7 +169,8 @@ describe("NodeReward testing", () => {
                     "0",
                     payMaster.address,
                     ethers.encodeBytes32String("foo"),
-                    ethers.encodeBytes32String("bar")
+                    ethers.encodeBytes32String("bar"),
+					expirationTime
                 )
             ).to.be.revertedWithCustomError(nodeReward, "AmountIsZero");
         });
@@ -180,21 +182,23 @@ describe("NodeReward testing", () => {
                     "1",
                     accounts[0].address,
                     ethers.encodeBytes32String("foo"),
-                    ethers.encodeBytes32String("bar")
+                    ethers.encodeBytes32String("bar"),
+					expirationTime
                 )
             ).to.be.revertedWithCustomError(nodeReward, "InvalidPayMaster");
         });
 
-        it("Should revert if falsy paymaster call", async () => {
+        it("Should revert if signature expired call", async () => {
             await expect(
-                nodeReward.connect(owner).claim(
+                nodeReward.connect(tokenOwner).claim(
                     "1",
                     "1",
-                    falsyPayMaster.address,
+                    payMaster.address,
                     ethers.encodeBytes32String("foo"),
-                    ethers.encodeBytes32String("bar")
+                    ethers.encodeBytes32String("bar"),
+					10001
                 )
-            ).to.be.revertedWithCustomError(nodeReward, "InvalidPayMaster");
+            ).to.be.revertedWithCustomError(nodeReward, "ExpiredSignature");
         });
 
         it("Should revert if non-token-owner call", async () => {
@@ -204,14 +208,27 @@ describe("NodeReward testing", () => {
                     "1",
                     payMaster.address,
                     ethers.encodeBytes32String("foo"),
-                    ethers.encodeBytes32String("bar")
+                    ethers.encodeBytes32String("bar"),
+					expirationTime
+                )
+            ).to.be.revertedWithCustomError(nodeReward, "InvalidTokenOwner");
+        });
+
+        it("Should revert if non-token-owner call", async () => {
+            await expect(
+                nodeReward.connect(nonTokenOwner).claim(
+                    "1",
+                    "1",
+                    payMaster.address,
+                    ethers.encodeBytes32String("foo"),
+                    ethers.encodeBytes32String("bar"),
+					expirationTime
                 )
             ).to.be.revertedWithCustomError(nodeReward, "InvalidTokenOwner");
         });
 
         it("Should claim correctly", async () => {
             const tokenId = "1";
-            const expirationTime = "1815874858";
             const amounT = "10";
 			const domain = {
 				name: "KIPNODEREWARD",
@@ -236,8 +253,9 @@ describe("NodeReward testing", () => {
                     payMaster.address,
                     ethers.encodeBytes32String("foo"),
                     signature,
+					expirationTime,
                 )
-            ).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, expirationTime, ethers.encodeBytes32String("foo"));
+            ).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, ethers.encodeBytes32String("foo"));
         });
     })
 });
