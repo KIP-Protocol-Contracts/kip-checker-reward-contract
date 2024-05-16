@@ -211,13 +211,14 @@ describe("NodeReward testing", () => {
 
         it("Should claim correctly", async () => {
             const tokenId = "1";
+            const expirationTime = "1815874858";
             const amounT = "10";
 			const domain = {
 				name: "KIPNODEREWARD",
 				version: "1",
 			};
 			const types = {
-			Claim: [{ name: "claimed", type: "uint256" }, { name: "token_id", type: "uint256" }, { name: "amount", type: "uint256" }, { name: "sender", type: "address" }, { name: "reference_id", type: "bytes32" }],
+			Claim: [{ name: "claimed", type: "uint256" }, { name: "token_id", type: "uint256" }, { name: "amount", type: "uint256" }, { name: "sender", type: "address" }, { name: "expiration_time", type: "uint64" }, { name: "reference_id", type: "bytes32" }],
 			};
 
 			const signature = await payMaster.signTypedData(domain, types, {
@@ -225,6 +226,7 @@ describe("NodeReward testing", () => {
 				token_id: tokenId,
 				amount: amounT,
 				sender: tokenOwner.address,
+				expiration_time: expirationTime,
 				reference_id: ethers.encodeBytes32String("foo"),
 			});
             await expect(
@@ -235,7 +237,7 @@ describe("NodeReward testing", () => {
                     ethers.encodeBytes32String("foo"),
                     signature,
                 )
-            ).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, ethers.encodeBytes32String("foo"));
+            ).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, expirationTime, ethers.encodeBytes32String("foo"));
         });
     })
 });

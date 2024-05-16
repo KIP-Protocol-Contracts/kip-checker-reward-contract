@@ -11,6 +11,7 @@ import "./EIP712Paymaster.sol";
 error AmountIsZero();
 error InvalidTokenOwner();
 error InvalidPayMaster();
+error ExpiredSignature();
 error InvalidSignature();
 error CanNotWithdrawYet();
 error InvalidAmount();
@@ -62,16 +63,17 @@ contract NodeReward is EIP712Paymaster {
         emit FundAddressChanged(_msgSender(), _address);
     }
 
-    function claim(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature) external {
+    function claim(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) external {
         if (amount == 0) revert AmountIsZero();
         if (paymaster[_paymaster] == false) revert InvalidPayMaster();
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
+        if (expiration_time < block.timestamp) revert ExpiredSignature();
 
         bytes32 digest = keccak256(
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(CLAIM_HASH, claimedAmounts[tokenId], tokenId, amount, _msgSender(), referenceId))
+                keccak256(abi.encode(CLAIM_HASH, claimedAmounts[tokenId], tokenId, amount, _msgSender(), expiration_time, referenceId))
             )
         );
         address recoveredAddress = digest.recover(signature);
@@ -81,9 +83,10 @@ contract NodeReward is EIP712Paymaster {
         emit Claimed(_msgSender(), tokenId, amount, _paymaster, referenceId);
     }
 
-    function withdraw(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature) external {
+    function withdraw(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) external {
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
         if (paymaster[_paymaster] == false) revert InvalidPayMaster();
+        if (expiration_time < block.timestamp) revert ExpiredSignature();
         if (amount == 0) revert AmountIsZero();
         if (lastWithdrawTime[tokenId] != 0) {
             if (lastWithdrawTime[tokenId]+WITHDRAW_INTERVAL > block.timestamp) {
@@ -99,7 +102,7 @@ contract NodeReward is EIP712Paymaster {
             abi.encodePacked(
                 "\x19\x01",
                 DOMAIN_SEPARATOR,
-                keccak256(abi.encode(WITHDRAW_HASH, withdrawAmounts[tokenId], tokenId, amount, _msgSender(), referenceId))
+                keccak256(abi.encode(WITHDRAW_HASH, withdrawAmounts[tokenId], tokenId, amount, _msgSender(), expiration_time, referenceId))
             )
         );
         address recoveredAddress = digest.recover(signature);

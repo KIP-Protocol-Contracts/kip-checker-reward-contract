@@ -10,8 +10,8 @@ contract EIP712Paymaster is Ownable {
     mapping(address => bool) public paymaster;
 
     bytes32 public DOMAIN_SEPARATOR;
-    bytes32 public constant CLAIM_HASH = keccak256("Claim(uint256 claimed,uint256 token_id,uint256 amount,address sender,bytes32 reference_id)");
-    bytes32 public constant WITHDRAW_HASH = keccak256("Withdraw(uint256 withdrawn,uint256 token_id,uint256 amount,address sender,bytes32 reference_id)");
+    bytes32 public constant CLAIM_HASH = keccak256("Claim(uint256 claimed,uint256 token_id,uint256 amount,address sender,uint64 expiration_time,bytes32 reference_id)");
+    bytes32 public constant WITHDRAW_HASH = keccak256("Withdraw(uint256 withdrawn,uint256 token_id,uint256 amount,address sender,uint64 expiration_time,bytes32 reference_id)");
 
     event PaymasterChanged(address indexed paymaster, bool enabled);
 
