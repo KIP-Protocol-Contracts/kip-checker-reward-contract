@@ -33,10 +33,10 @@ contract NodeReward is EIP712Paymaster {
     mapping(uint256 => uint256) private fines;
     mapping(uint256 => uint256) public claimedAmounts;
     mapping(uint256 => uint256) public withdrawAmounts;
-    mapping(uint256 => address) public delegations;
+    mapping(uint256 => mapping(uint256 => address)) public delegations;
 
     event FundAddressChanged(address indexed operator, address indexed _address);
-    event DelegationChanged(address indexed tokenOwner, uint256 tokenId, address indexed delegation);
+    event DelegationChanged(address indexed tokenOwner, uint256 tokenId, uint256 slot, address indexed delegation);
     event Claimed(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId);
     event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount);
     event Penalty(address indexed paymaster, uint256 tokenId, uint256 amount, bytes32 referenceId);
@@ -48,14 +48,14 @@ contract NodeReward is EIP712Paymaster {
         setPaymaster(_paymaster,true);
     }
 
-    function getDelegation(uint256 tokenId) external view returns (address)  {
-        return delegations[tokenId];
+    function getDelegation(uint256 tokenId, uint256 slot) external view returns (address)  {
+        return delegations[tokenId][slot];
     }
 
-    function setDelegation(uint256 tokenId, address _address) external {
+    function setDelegation(uint256 tokenId, uint256 slot, address _address) external {
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
-        delegations[tokenId] = _address;
-        emit DelegationChanged(_msgSender(), tokenId, _address);
+        delegations[tokenId][slot] = _address;
+        emit DelegationChanged(_msgSender(), tokenId, slot, _address);
     }
 
     function setFundAddress(address _address) external onlyOwner {
