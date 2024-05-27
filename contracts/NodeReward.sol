@@ -38,7 +38,7 @@ contract NodeReward is EIP712Paymaster {
     event FundAddressChanged(address indexed operator, address indexed _address);
     event DelegationChanged(address indexed tokenOwner, uint256 tokenId, uint256 slot, address indexed delegation);
     event Claimed(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId);
-    event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount);
+    event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount, bytes32 referenceId);
     event Penalty(address indexed paymaster, uint256 tokenId, uint256 amount, bytes32 referenceId);
     
     constructor(address initialOwner, address kipNodeAddress, address cKIPToken, address _fundAddress, address _paymaster) EIP712Paymaster(initialOwner) {
@@ -111,7 +111,7 @@ contract NodeReward is EIP712Paymaster {
         lastWithdrawTime[tokenId] = block.timestamp;
         withdrawAmounts[tokenId] += amount;
         
-        emit Withdraw(_msgSender(), tokenId, amount);
+        emit Withdraw(_msgSender(), tokenId, amount, referenceId);
         require(cKIP.transferFrom(fundAddress, _msgSender(), amount), "Transfer failed");
     }
 
