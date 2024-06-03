@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
+import { Wallet } from "ethers"; // Import Wallet
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { CKIP, CKIP__factory, KIPNode, KIPNode__factory, NodeReward, NodeReward__factory } from "../typechain-types";
 import { token } from "../typechain-types/@openzeppelin/contracts";
@@ -9,6 +10,7 @@ describe("NodeReward testing", () => {
     let fundAddress: HardhatEthersSigner;
     let newFundAddress: HardhatEthersSigner;
     let payMaster: HardhatEthersSigner;
+    let payMaster1: HardhatEthersSigner;
     let accounts: HardhatEthersSigner[];
     let ckip: CKIP;
     let kipNode: KIPNode;
@@ -16,6 +18,9 @@ describe("NodeReward testing", () => {
 
     beforeEach(async () => {
         [owner, fundAddress, newFundAddress, payMaster, ...accounts] = await ethers.getSigners();
+
+				const payMasterWallet = new Wallet("67cbae62b37d235e7479a89849ccc7d5ecabce1baaa1835aad9d749de17406b0", ethers.provider);
+        payMaster1 = payMasterWallet as HardhatEthersSigner;
 
         const ERC20 = (await ethers.getContractFactory(
             "CKIP",
@@ -91,12 +96,12 @@ describe("NodeReward testing", () => {
             await kipNode.mint((await accounts[2].getAddress()), "1")
             await expect(
                 nodeReward.connect(accounts[0])
-                    .setDelegation("1", (await accounts[1].getAddress()))
+                    .setDelegation("1", "1", (await accounts[1].getAddress()))
             ).to.be.revertedWithCustomError(nodeReward, "InvalidTokenOwner");
         });
 
         it("Should return address 0 when getDelegation not set", async () => {
-            expect(await nodeReward.getDelegation("1"))
+            expect(await nodeReward.getDelegation("1", "1"))
                 .to.equal("0x0000000000000000000000000000000000000000");
         });
 
@@ -105,11 +110,11 @@ describe("NodeReward testing", () => {
 
             await expect(
                 nodeReward.connect(accounts[0])
-                    .setDelegation("1", (await accounts[1].getAddress())
+                    .setDelegation("1", "1", (await accounts[1].getAddress())
                     ))
-                .to.emit(nodeReward, "DelegationChanged").withArgs(await accounts[0].getAddress(), "1", await accounts[1].getAddress());
+                .to.emit(nodeReward, "DelegationChanged").withArgs(await accounts[0].getAddress(), "1", "1", await accounts[1].getAddress());
 
-            expect(await nodeReward.getDelegation("1"))
+            expect(await nodeReward.getDelegation("1", "1"))
                 .to.equal((await accounts[1].getAddress()));
         });
     });
@@ -244,18 +249,21 @@ describe("NodeReward testing", () => {
 				amount: amounT,
 				sender: tokenOwner.address,
 				expiration_time: expirationTime,
-				reference_id: ethers.encodeBytes32String("foo"),
+				reference_id: ethers.encodeBytes32String("6"),
 			});
+				console.log(await payMaster1.getAddress());
+				console.log("reference_id : "+ethers.encodeBytes32String("6"));
+				console.log("signature : "+signature);
             await expect(
                 nodeReward.connect(tokenOwner).claim(
                     tokenId,
                     amounT,
                     payMaster.address,
-                    ethers.encodeBytes32String("foo"),
+                    ethers.encodeBytes32String("6"),
                     signature,
 					expirationTime,
                 )
-            ).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, ethers.encodeBytes32String("foo"));
+            ).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, ethers.encodeBytes32String("6"));
         });
     })
 });
