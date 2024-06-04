@@ -232,12 +232,27 @@ describe("NodeReward testing", () => {
             ).to.be.revertedWithCustomError(nodeReward, "InvalidTokenOwner");
         });
 
+
+
         it("Should claim correctly", async () => {
+
+			
+				
+const chainIdBigInt = (await ethers.provider.getNetwork()).chainId; //returns BigInt => 1337n for hardhat
+const chainId = Number(chainIdBigInt) // convert to interger;
+console.log(chainId) // 1337
+
+	//			const { chainId } = (await ethers.provider.getNetwork());
+			//	console.log(chainId);
+				const myContractDeployedAddress = (await nodeReward.getAddress());
+				console.log(myContractDeployedAddress);
             const tokenId = "1";
             const amounT = "10";
 			const domain = {
 				name: "KIPNODEREWARD",
 				version: "1",
+				chainId: chainId,
+				verifyingContract: myContractDeployedAddress,
 			};
 			const types = {
 			Claim: [{ name: "claimed", type: "uint256" }, { name: "token_id", type: "uint256" }, { name: "amount", type: "uint256" }, { name: "sender", type: "address" }, { name: "expiration_time", type: "uint64" }, { name: "reference_id", type: "bytes32" }],
