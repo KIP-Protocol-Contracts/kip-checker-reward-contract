@@ -42,8 +42,7 @@ describe("NodeReward testing", () => {
             owner.address,
             await kipNode.getAddress(),
             await ckip.getAddress(),
-            await fundAddress.getAddress(),
-            await payMaster.getAddress(),
+            await fundAddress.getAddress()
         );
     });
 

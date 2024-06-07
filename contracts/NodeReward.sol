@@ -41,11 +41,11 @@ contract NodeReward is EIP712Paymaster {
     event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId);
     event Penalty(address indexed paymaster, uint256 tokenId, uint256 amount, bytes32 referenceId);
     
-    constructor(address initialOwner, address kipNodeAddress, address cKIPToken, address _fundAddress, address _paymaster) EIP712Paymaster(initialOwner) {
+    constructor(address initialOwner, address kipNodeAddress, address cKIPToken, address _fundAddress) EIP712Paymaster(initialOwner) {
         kipNode = IERC721(kipNodeAddress);
         cKIP = IERC20(cKIPToken);
         fundAddress = _fundAddress;
-        setPaymaster(_paymaster,true);
+        //setPaymaster(_paymaster,true);
     }
 
     function getDelegation(uint256 tokenId, uint256 slot) external view returns (address)  {
