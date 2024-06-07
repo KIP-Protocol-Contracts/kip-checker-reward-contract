@@ -29,8 +29,8 @@ contract NodeReward is EIP712Paymaster {
     uint256 public constant WITHDRAW_INTERVAL = 2592000; // 30 days;
 
     // mapping(address => bool) private paymaster;
-    mapping(uint256 => uint256) private lastWithdrawTime;
-    mapping(uint256 => uint256) private fines;
+    mapping(uint256 => uint256) public lastWithdrawTime;
+    mapping(uint256 => uint256) public fines;
     mapping(uint256 => uint256) public claimedAmounts;
     mapping(uint256 => uint256) public withdrawAmounts;
     mapping(uint256 => mapping(uint256 => address)) public delegations;
