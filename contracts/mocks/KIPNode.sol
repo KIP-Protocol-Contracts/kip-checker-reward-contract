@@ -1,12 +1,18 @@
-// SPDX-License-Identifier: None
+// SPDX-License-Identifier: MIT
+// Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract KIPNode is ERC721 {
-    constructor() ERC721("KIP License", "KIPNODE") {}
+    uint256 private _nextTokenId;
 
-    function mint(address to, uint256 tokenId) external {
-        _mint(to, tokenId);
+    constructor()
+        ERC721("KIP Node", "NODE")
+    {}
+
+    function safeMint(address to) external {
+        uint256 tokenId = _nextTokenId++;
+        _safeMint(to, tokenId);
     }
 }
