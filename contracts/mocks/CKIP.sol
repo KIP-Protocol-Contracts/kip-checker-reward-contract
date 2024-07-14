@@ -1,15 +1,12 @@
-// SPDX-License-Identifier: MIT
-// Compatible with OpenZeppelin Contracts ^5.0.0
+// SPDX-License-Identifier: None
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract CKIP is ERC20 {
-    constructor() ERC20("CKIP", "CKIP") {
-        _mint(msg.sender, 1000000000000 * 10 ** decimals());
-    }
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {}
 
-    function mint(address to) external {
-        _mint(to, 100000 * 10 ** decimals());
+    function mint(address _to, uint256 _amount) external {
+        _mint(_to, _amount);
     }
 }
