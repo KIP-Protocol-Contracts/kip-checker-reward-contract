@@ -4,12 +4,14 @@
 
 - Network: `Sepolia Arbitrum`
       
-  - `Node Reward` contract: [https://sepolia.arbiscan.io/address/0x172c24718a7b0d707abee5144a782540ed3b827b](https://sepolia.arbiscan.io/address/0x172c24718a7b0d707abee5144a782540ed3b827b)
+  - `Node Reward` contract: [https://sepolia.arbiscan.io/address/0x6ccf70d5e6d2b5aa792697205fe2038a7ff2ec93](https://sepolia.arbiscan.io/address/0x6ccf70d5e6d2b5aa792697205fe2038a7ff2ec93)
       
   - `KIP Token` contract: [https://sepolia.arbiscan.io/token/0xf87c83a42719daa1055ddd2fc3c385e21a252f09](https://sepolia.arbiscan.io/token/0xf87c83a42719daa1055ddd2fc3c385e21a252f09)
       
   - `KIP Node (NFT)` contract: [https://sepolia.arbiscan.io/address/0xec5fbc86fd39cdd8a0ce1d4247ba2b0b09f5146e](https://sepolia.arbiscan.io/address/0xec5fbc86fd39cdd8a0ce1d4247ba2b0b09f5146e)
 
+
+## Implementation
 
 Description of requirements for the contract implementation:
 
