@@ -1,3 +1,16 @@
+### Deployed Smart Contract
+
+##### Version: July 14th, 2024
+
+- Network: `Sepolia Arbitrum`
+      
+  - `Node Reward` contract: [https://sepolia.arbiscan.io/address/0x172c24718a7b0d707abee5144a782540ed3b827b](https://sepolia.arbiscan.io/address/0x172c24718a7b0d707abee5144a782540ed3b827b)
+      
+  - `KIP Token` contract: [https://sepolia.arbiscan.io/token/0xf87c83a42719daa1055ddd2fc3c385e21a252f09](https://sepolia.arbiscan.io/token/0xf87c83a42719daa1055ddd2fc3c385e21a252f09)
+      
+  - `KIP Node (NFT)` contract: [https://sepolia.arbiscan.io/address/0xec5fbc86fd39cdd8a0ce1d4247ba2b0b09f5146e](https://sepolia.arbiscan.io/address/0xec5fbc86fd39cdd8a0ce1d4247ba2b0b09f5146e)
+
+
 Description of requirements for the contract implementation:
 
 Token owners who purchase our node NFT will download our node client to run on a VPS. The node client retrieves tasks, executes them, and reports the data.
