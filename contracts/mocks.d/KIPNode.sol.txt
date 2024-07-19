@@ -12,7 +12,7 @@ contract KIPNode is ERC721 {
     {}
 
     function mint(address to) external {
-        uint256 tokenId = _nextTokenId++;
-        _safeMint(to, tokenId);
+        _nextTokenId++;
+        _safeMint(to, _nextTokenId);
     }
 }
