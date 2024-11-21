@@ -123,8 +123,8 @@ describe("NodeReward testing", () => {
 
         beforeEach(async () => {
             [falsyPayMaster] = await ethers.getSigners();
-            await nodeReward.connect(owner).setPaymaster((await falsyPayMaster.getAddress()), false);
-            await nodeReward.connect(owner).setPaymaster((await payMaster.getAddress()), true);
+            await nodeReward.connect(owner).setAuditor((await falsyPayMaster.getAddress()), false);
+            await nodeReward.connect(owner).setAuditor((await payMaster.getAddress()), true);
         });
 
         it("Should revert if amount 0", async () => {
@@ -163,6 +163,8 @@ describe("NodeReward testing", () => {
             [falsyPayMaster, tokenOwner, nonTokenOwner] = await ethers.getSigners();
             await nodeReward.connect(owner).setPaymaster(falsyPayMaster.address, false);
             await nodeReward.connect(owner).setPaymaster(payMaster.address, true);
+            await nodeReward.connect(owner).setTreasurer(falsyPayMaster.address, false);
+            await nodeReward.connect(owner).setTreasurer(payMaster.address, true);
             await kipNode.mint(tokenOwner.address, "1");
         });
 

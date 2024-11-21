@@ -1,5 +1,15 @@
 ### Deployed Smart Contract
 
+##### Version: November 21th, 2024
+
+- Network: `Sepolia Arbitrum`
+      
+  - `Node Reward` contract: [https://sepolia.arbiscan.io/address/0x824c2443c0fd7e5ef0291ad2d88d5bcd69cfccce](https://sepolia.arbiscan.io/address/0x824c2443c0fd7e5ef0291ad2d88d5bcd69cfccce)
+      
+  - `KIP Token` contract: [https://sepolia.arbiscan.io/address/0xeceD87Aa8380efF7E5c53F887E6F67450D1bB319#writeContract#F1](https://sepolia.arbiscan.io/address/0xeceD87Aa8380efF7E5c53F887E6F67450D1bB319)
+      
+  - `KIP Node (NFT)` contract: [https://sepolia.arbiscan.io/address/0xfFb351E6f8d5d211E1c78e02BC74aE6d448F6D05#writeContract#F2](https://sepolia.arbiscan.io/address/0xfFb351E6f8d5d211E1c78e02BC74aE6d448F6D05)
+
 ##### Version: July 14th, 2024
 
 - Network: `Sepolia Arbitrum`
