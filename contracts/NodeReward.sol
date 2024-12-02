@@ -50,9 +50,11 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
     event AuditorChanged(address indexed auditor, bool enabled);
     event TreasurerChanged(address indexed treasurer, bool enabled);
     event FundAddressChanged(address indexed operator, address indexed _address);
+    event WithdrawIntervalChanged(address indexed operator, uint40 newInterval);
+    event ClaimIntervalChanged(address indexed operator, uint40 newInterval);
     event DelegationChanged(address indexed tokenOwner, uint256 tokenId, uint256 slot, address indexed delegation);
-    event Claimed(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId);
-    event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId);
+    event Claimed(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId, uint256 block_timestamp);
+    event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId, uint256 block_timestamp);
     event Penalty(address indexed paymaster, uint256 tokenId, uint256 amount, bytes32 referenceId);
     
     constructor() {
@@ -121,7 +123,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         
         claimedAmounts[tokenId] += amount;
         lastClaimTime[tokenId] = block.timestamp;
-        emit Claimed(_msgSender(), tokenId, amount, _paymaster, referenceId);
+        emit Claimed(_msgSender(), tokenId, amount, _paymaster, referenceId, block.timestamp);
     }
 
     function withdraw(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) external whenNotPaused {
@@ -157,7 +159,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         lastWithdrawTime[tokenId] = block.timestamp;
         withdrawAmounts[tokenId] += amount;
         
-        emit Withdraw(_msgSender(), tokenId, amount, _paymaster, referenceId);
+        emit Withdraw(_msgSender(), tokenId, amount, _paymaster, referenceId, block.timestamp);
         // require(cKIP.transferFrom(fundAddress, _msgSender(), amount), "Transfer failed");
     }
 
@@ -171,10 +173,12 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
 
     function setWithdrawInterval(uint40 interval) external onlyOwner {
         WITHDRAW_INTERVAL = interval;
+        emit WithdrawIntervalChanged(_msgSender(), interval);
     }
 
     function setClaimInterval(uint40 interval) external onlyOwner {
         CLAIM_INTERVAL = interval;
+        emit ClaimIntervalChanged(_msgSender(), interval);
     }
 
     function setPaymaster(address _address, bool enabled) external onlyOwner {
