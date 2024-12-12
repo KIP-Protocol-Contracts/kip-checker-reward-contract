@@ -20,6 +20,7 @@ error InvalidSignature();
 error CanNotWithdrawYet01();
 error CanNotWithdrawYet02();
 error InvalidAmount();
+error ArrayLengthsError();
 
 contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, PausableUpgradeable {
     using ECDSA for bytes32;
@@ -94,7 +95,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         return delegations[tokenId][slot];
     }
 
-    function setDelegation(uint256 tokenId, uint256 slot, address _address) external {
+    function setDelegation(uint256 tokenId, uint256 slot, address _address) public {
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
         delegations[tokenId][slot] = _address;
         emit DelegationChanged(_msgSender(), tokenId, slot, _address);
@@ -202,4 +203,17 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
     function unpause() public onlyOwner {
         _unpause();
     }
+
+    function batchSetDelegation(
+        uint256[] calldata tokenIds,
+        uint256[] calldata slots,
+        address[] calldata addresses
+    ) external {
+        if (tokenIds.length != slots.length || tokenIds.length != addresses.length) revert ArrayLengthsError();
+
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            setDelegation(tokenIds[i], slots[i], addresses[i]);
+        }
+    }
+
 }
