@@ -154,13 +154,12 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         );
         address recoveredAddress = digest.recover(signature);
         if (recoveredAddress != _paymaster) revert InvalidSignature();
-        IERC20(cKIP).safeTransferFrom(fundAddress, _msgSender(), amount);
         
         lastWithdrawTime[tokenId] = block.timestamp;
         withdrawAmounts[tokenId] += amount;
         
         emit Withdraw(_msgSender(), tokenId, amount, _paymaster, referenceId, block.timestamp);
-        // require(cKIP.transferFrom(fundAddress, _msgSender(), amount), "Transfer failed");
+        IERC20(cKIP).safeTransferFrom(fundAddress, _msgSender(), amount);
     }
 
     function penalty(uint256 tokenId, uint256 amount, bytes32 referenceId) external {
