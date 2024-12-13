@@ -54,9 +54,9 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
     event WithdrawIntervalChanged(address indexed operator, uint40 newInterval);
     event ClaimIntervalChanged(address indexed operator, uint40 newInterval);
     event DelegationChanged(address indexed tokenOwner, uint256 tokenId, uint256 slot, address indexed delegation);
-    event Claimed(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId, uint256 block_timestamp);
-    event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId, uint256 block_timestamp);
-    event Penalty(address indexed paymaster, uint256 tokenId, uint256 amount, bytes32 referenceId);
+    event Claimed(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId, uint256 amountT);
+    event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId, uint256 amountT);
+    event Penalty(address indexed paymaster, uint256 tokenId, uint256 amount, bytes32 referenceId, uint256 amountT);
     
     constructor() {
         _disableInitializers();
@@ -122,9 +122,9 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         address recoveredAddress = digest.recover(signature);
         if (recoveredAddress != _paymaster) revert InvalidSignature();
         
-        claimedAmounts[tokenId] += amount;
+        uint256 amountT = claimedAmounts[tokenId] += amount;
         lastClaimTime[tokenId] = block.timestamp;
-        emit Claimed(_msgSender(), tokenId, amount, _paymaster, referenceId, block.timestamp);
+        emit Claimed(_msgSender(), tokenId, amount, _paymaster, referenceId, amountT);
     }
 
     function withdraw(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) external whenNotPaused {
@@ -157,9 +157,8 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         if (recoveredAddress != _paymaster) revert InvalidSignature();
         
         lastWithdrawTime[tokenId] = block.timestamp;
-        withdrawAmounts[tokenId] += amount;
-        
-        emit Withdraw(_msgSender(), tokenId, amount, _paymaster, referenceId, block.timestamp);
+        uint256 amountT = withdrawAmounts[tokenId] += amount;
+        emit Withdraw(_msgSender(), tokenId, amount, _paymaster, referenceId, amountT);
         IERC20(cKIP).safeTransferFrom(fundAddress, _msgSender(), amount);
     }
 
@@ -168,7 +167,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         if (auditor[_msgSender()] == false) revert InvalidAuditor();
 
         fines[tokenId] += amount;
-        emit Penalty(_msgSender(), tokenId, amount, referenceId);
+        emit Penalty(_msgSender(), tokenId, amount, referenceId, fines[tokenId]);
     }
 
     function setWithdrawInterval(uint40 interval) external onlyOwner {
