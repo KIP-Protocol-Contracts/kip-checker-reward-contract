@@ -156,6 +156,33 @@ describe("NodeReward testing", () => {
         });
     });
 
+    describe("pause/unpause testing", () => {
+        it("Should revert if non-owner pause", async () => {
+            await expect(
+                nodeReward.connect(accounts[0]).pause()
+            ).to.be.revertedWithCustomError(nodeReward, "OwnableUnauthorizedAccount");
+        });
+
+        it("Should pause correctly", async () => {
+            await expect(
+                nodeReward.connect(owner).pause()
+            ).to.emit(nodeReward, "Paused").withArgs(owner.address);
+        });
+
+        it("Should revert if non-owner unpause", async () => {
+            await expect(
+                nodeReward.connect(accounts[0]).unpause()
+            ).to.be.revertedWithCustomError(nodeReward, "OwnableUnauthorizedAccount");
+        });
+
+        it("Should unpause correctly", async () => {
+            await nodeReward.connect(owner).pause();
+            await expect(
+                nodeReward.connect(owner).unpause()
+            ).to.emit(nodeReward, "Unpaused").withArgs(owner.address);
+        });
+    });
+
     describe("claim testing", () => {
         let falsyPayMaster: HardhatEthersSigner;
         let tokenOwner: HardhatEthersSigner;
