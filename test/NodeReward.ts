@@ -1,26 +1,23 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Wallet } from "ethers"; // Import Wallet
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { CKIP, CKIP__factory, KIPNode, KIPNode__factory, NodeReward, NodeReward__factory } from "../typechain-types";
-import { token } from "../typechain-types/@openzeppelin/contracts";
+import { time } from "@nomicfoundation/hardhat-network-helpers";
+
 
 describe("NodeReward testing", () => {
     let owner: HardhatEthersSigner;
     let fundAddress: HardhatEthersSigner;
     let newFundAddress: HardhatEthersSigner;
     let payMaster: HardhatEthersSigner;
-    let payMaster1: HardhatEthersSigner;
+    let newPayMaster: HardhatEthersSigner;
     let accounts: HardhatEthersSigner[];
     let ckip: CKIP;
     let kipNode: KIPNode;
     let nodeReward: NodeReward;
 
     beforeEach(async () => {
-        [owner, fundAddress, newFundAddress, payMaster, ...accounts] = await ethers.getSigners();
-
-				const payMasterWallet = new Wallet("67cbae62b37d235e7479a89849ccc7d5ecabce1baaa1835aad9d749de17406b0", ethers.provider);
-        payMaster1 = payMasterWallet as HardhatEthersSigner;
+        [owner, fundAddress, newFundAddress, payMaster, newPayMaster, ...accounts] = await ethers.getSigners();
 
         const ERC20 = (await ethers.getContractFactory(
             "CKIP",
@@ -38,12 +35,19 @@ describe("NodeReward testing", () => {
             "NodeReward",
             owner,
         )) as NodeReward__factory;
-        nodeReward = await NodeReward.deploy(
-            owner.address,
-            await kipNode.getAddress(),
-            await ckip.getAddress(),
-            await fundAddress.getAddress()
-        );
+
+        const ERC1967Proxy = await ethers.getContractFactory('Proxy1967');
+        const nodeRewardImpl = await NodeReward.deploy();
+        const nodeRewardProxy = await ERC1967Proxy.deploy(
+            await nodeRewardImpl.getAddress(),
+            NodeReward.interface.encodeFunctionData("initialize", [
+                owner.address,
+                await kipNode.getAddress(),
+                await ckip.getAddress(),
+                await fundAddress.getAddress()
+            ])
+        )
+        nodeReward = NodeReward.attach(await nodeRewardProxy.getAddress()) as NodeReward;
     });
 
     it("Should init contract correctly", async () => {
@@ -136,13 +140,13 @@ describe("NodeReward testing", () => {
         it("Should revert if non-paymaster call", async () => {
             await expect(
                 nodeReward.connect(accounts[0]).penalty("1", "1", ethers.encodeBytes32String("foo"))
-            ).to.be.revertedWithCustomError(nodeReward, "InvalidPayMaster");
+            ).to.be.revertedWithCustomError(nodeReward, "InvalidAuditor");
         });
 
         it("Should revert if falsy paymaster call", async () => {
             await expect(
                 nodeReward.connect(falsyPayMaster).penalty("1", "1", ethers.encodeBytes32String("foo"))
-            ).to.be.revertedWithCustomError(nodeReward, "InvalidPayMaster");
+            ).to.be.revertedWithCustomError(nodeReward, "InvalidAuditor");
         });
 
         it("Should call penalty", async () => {
@@ -176,7 +180,7 @@ describe("NodeReward testing", () => {
                     payMaster.address,
                     ethers.encodeBytes32String("foo"),
                     ethers.encodeBytes32String("bar"),
-					expirationTime
+                    expirationTime
                 )
             ).to.be.revertedWithCustomError(nodeReward, "AmountIsZero");
         });
@@ -189,7 +193,7 @@ describe("NodeReward testing", () => {
                     accounts[0].address,
                     ethers.encodeBytes32String("foo"),
                     ethers.encodeBytes32String("bar"),
-					expirationTime
+                    expirationTime
                 )
             ).to.be.revertedWithCustomError(nodeReward, "InvalidPayMaster");
         });
@@ -202,7 +206,7 @@ describe("NodeReward testing", () => {
                     payMaster.address,
                     ethers.encodeBytes32String("foo"),
                     ethers.encodeBytes32String("bar"),
-					10001
+                    10001
                 )
             ).to.be.revertedWithCustomError(nodeReward, "ExpiredSignature");
         });
@@ -215,7 +219,7 @@ describe("NodeReward testing", () => {
                     payMaster.address,
                     ethers.encodeBytes32String("foo"),
                     ethers.encodeBytes32String("bar"),
-					expirationTime
+                    expirationTime
                 )
             ).to.be.revertedWithCustomError(nodeReward, "InvalidTokenOwner");
         });
@@ -228,58 +232,249 @@ describe("NodeReward testing", () => {
                     payMaster.address,
                     ethers.encodeBytes32String("foo"),
                     ethers.encodeBytes32String("bar"),
-					expirationTime
+                    expirationTime
                 )
             ).to.be.revertedWithCustomError(nodeReward, "InvalidTokenOwner");
         });
 
+        it("Should revert if non-owner setWithdrawInterval", async () => {
+            await expect(
+                nodeReward.connect(accounts[0]).setWithdrawInterval(1000)
+            ).to.be.revertedWithCustomError(nodeReward, "OwnableUnauthorizedAccount");
+        });
 
+        it("Should setWithdrawInterval correctly", async () => {
+            await expect(
+                nodeReward.connect(owner).setWithdrawInterval(1000)
+            ).to.emit(nodeReward, "WithdrawIntervalChanged").withArgs(owner.address, 1000);
+            expect(await nodeReward.WITHDRAW_INTERVAL()).to.equal(1000);
+        });
 
-        it("Should claim correctly", async () => {
+        it("Should revert if non-owner setClaimInterval", async () => {
+            await expect(
+                nodeReward.connect(accounts[0]).setClaimInterval(1000)
+            ).to.be.revertedWithCustomError(nodeReward, "OwnableUnauthorizedAccount");
+        });
 
-			
-				
-const chainIdBigInt = (await ethers.provider.getNetwork()).chainId; //returns BigInt => 1337n for hardhat
-const chainId = Number(chainIdBigInt) // convert to interger;
-console.log(chainId) // 1337
+        it("Should setClaimInterval correctly", async () => {
+            await expect(
+                nodeReward.connect(owner).setClaimInterval(1000)
+            ).to.emit(nodeReward, "ClaimIntervalChanged").withArgs(owner.address, 1000);
+            expect(await nodeReward.CLAIM_INTERVAL()).to.equal(1000);
+        });
 
-	//			const { chainId } = (await ethers.provider.getNetwork());
-			//	console.log(chainId);
-				const myContractDeployedAddress = (await nodeReward.getAddress());
-				console.log(myContractDeployedAddress);
+        it("Should revert if trying to claim with same reference_id", async () => {
+            const chainIdBigInt = (await ethers.provider.getNetwork()).chainId;
+            const chainId = Number(chainIdBigInt);
+            const myContractDeployedAddress = (await nodeReward.getAddress());
             const tokenId = "1";
             const amounT = "10";
-			const domain = {
-				name: "KIPNODEREWARD",
-				version: "1",
-				chainId: chainId,
-				verifyingContract: myContractDeployedAddress,
-			};
-			const types = {
-			Claim: [{ name: "claimed", type: "uint256" }, { name: "token_id", type: "uint256" }, { name: "amount", type: "uint256" }, { name: "sender", type: "address" }, { name: "expiration_time", type: "uint64" }, { name: "reference_id", type: "bytes32" }],
-			};
+            const referenceId = ethers.encodeBytes32String("duplicate");
 
-			const signature = await payMaster.signTypedData(domain, types, {
-				claimed: "0",
-				token_id: tokenId,
-				amount: amounT,
-				sender: tokenOwner.address,
-				expiration_time: expirationTime,
-				reference_id: ethers.encodeBytes32String("6"),
-			});
-				console.log(await payMaster1.getAddress());
-				console.log("reference_id : "+ethers.encodeBytes32String("6"));
-				console.log("signature : "+signature);
+            const domain = {
+                name: "KIPNODEREWARD",
+                version: "1",
+                chainId: chainId,
+                verifyingContract: myContractDeployedAddress,
+            };
+
+            const types = {
+                Claim: [
+                    { name: "claimed", type: "uint256" },
+                    { name: "token_id", type: "uint256" },
+                    { name: "amount", type: "uint256" },
+                    { name: "sender", type: "address" },
+                    { name: "expiration_time", type: "uint64" },
+                    { name: "reference_id", type: "bytes32" }
+                ],
+            };
+
+            const signature = await payMaster.signTypedData(domain, types, {
+                claimed: "0",
+                token_id: tokenId,
+                amount: amounT,
+                sender: tokenOwner.address,
+                expiration_time: expirationTime,
+                reference_id: referenceId,
+            });
+
+            // First claim should succeed
+            await nodeReward.connect(tokenOwner).claim(
+                tokenId,
+                amounT,
+                payMaster.address,
+                referenceId,
+                signature,
+                expirationTime
+            );
+
+            // Second claim with same reference_id should fail
             await expect(
                 nodeReward.connect(tokenOwner).claim(
                     tokenId,
                     amounT,
                     payMaster.address,
-                    ethers.encodeBytes32String("6"),
+                    referenceId,
                     signature,
-					expirationTime,
+                    expirationTime
                 )
-            ).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, ethers.encodeBytes32String("6"));
+            ).to.be.reverted
         });
+
+        it("Should revert if signature is invalid", async () => {
+            const chainIdBigInt = (await ethers.provider.getNetwork()).chainId;
+            const chainId = Number(chainIdBigInt);
+            const myContractDeployedAddress = (await nodeReward.getAddress());
+            const tokenId = "1";
+            const amounT = "10";
+
+            const domain = {
+                name: "KIPNODEREWARD",
+                version: "1",
+                chainId: chainId,
+                verifyingContract: myContractDeployedAddress,
+            };
+
+            const types = {
+                Claim: [
+                    { name: "claimed", type: "uint256" },
+                    { name: "token_id", type: "uint256" },
+                    { name: "amount", type: "uint256" },
+                    { name: "sender", type: "address" },
+                    { name: "expiration_time", type: "uint64" },
+                    { name: "reference_id", type: "bytes32" }
+                ],
+            };
+
+            // Sign with a different amount than what will be claimed
+            const signature = await payMaster.signTypedData(domain, types, {
+                claimed: "0",
+                token_id: tokenId,
+                amount: "20", // Different amount
+                sender: tokenOwner.address,
+                expiration_time: expirationTime,
+                reference_id: ethers.encodeBytes32String("invalid"),
+            });
+
+            await expect(
+                nodeReward.connect(tokenOwner).claim(
+                    tokenId,
+                    amounT, // Using different amount than what was signed
+                    payMaster.address,
+                    ethers.encodeBytes32String("invalid"),
+                    signature,
+                    expirationTime
+                )
+            ).to.be.revertedWithCustomError(nodeReward, "InvalidSignature");
+        });
+
+        it("Should claim correctly", async () => {
+            const chainIdBigInt = (await ethers.provider.getNetwork()).chainId; //returns BigInt => 1337n for hardhat
+            const chainId = Number(chainIdBigInt) // convert to interger;
+            console.log(chainId) // 1337
+            const myContractDeployedAddress = (await nodeReward.getAddress());
+            console.log(myContractDeployedAddress);
+            const tokenId = "1";
+            const amounT = "10";
+            const domain = {
+                name: "KIPNODEREWARD",
+                version: "1",
+                chainId: chainId,
+                verifyingContract: myContractDeployedAddress,
+            };
+            const types = {
+                Claim: [{ name: "claimed", type: "uint256" }, { name: "token_id", type: "uint256" }, { name: "amount", type: "uint256" }, { name: "sender", type: "address" }, { name: "expiration_time", type: "uint64" }, { name: "reference_id", type: "bytes32" }],
+            };
+
+            const signature = await payMaster.signTypedData(domain, types, {
+                claimed: "0",
+                token_id: tokenId,
+                amount: amounT,
+                sender: tokenOwner.address,
+                expiration_time: expirationTime,
+                reference_id: ethers.encodeBytes32String("6"),
+            });
+            console.log(await newPayMaster.getAddress());
+            console.log("reference_id : " + ethers.encodeBytes32String("6"));
+            console.log("signature : " + signature);
+            const tx = await nodeReward.connect(tokenOwner).claim(
+                tokenId,
+                amounT,
+                payMaster.address,
+                ethers.encodeBytes32String("6"),
+                signature,
+                expirationTime,
+            )
+            const blockTime = (await ethers.provider.getBlock(tx?.blockNumber))?.timestamp;
+            await expect(tx).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, ethers.encodeBytes32String("6"), blockTime);
+        });
+
+        it("Should withdraw correctly after claim", async () => {
+            const chainIdBigInt = (await ethers.provider.getNetwork()).chainId; //returns BigInt => 1337n for hardhat
+            const chainId = Number(chainIdBigInt) // convert to interger;
+            console.log(chainId) // 1337
+            const myContractDeployedAddress = (await nodeReward.getAddress());
+            console.log(myContractDeployedAddress);
+            const tokenId = "1";
+            const amounT = "10";
+            const domain = {
+                name: "KIPNODEREWARD",
+                version: "1",
+                chainId: chainId,
+                verifyingContract: myContractDeployedAddress,
+            };
+            const types = {
+                Claim: [{ name: "claimed", type: "uint256" }, { name: "token_id", type: "uint256" }, { name: "amount", type: "uint256" }, { name: "sender", type: "address" }, { name: "expiration_time", type: "uint64" }, { name: "reference_id", type: "bytes32" }],
+            };
+
+            const signature = await payMaster.signTypedData(domain, types, {
+                claimed: "0",
+                token_id: tokenId,
+                amount: amounT,
+                sender: tokenOwner.address,
+                expiration_time: expirationTime,
+                reference_id: ethers.encodeBytes32String("6"),
+            });
+            console.log(await newPayMaster.getAddress());
+            console.log("reference_id : " + ethers.encodeBytes32String("6"));
+            console.log("signature : " + signature);
+            const tx = await nodeReward.connect(tokenOwner).claim(
+                tokenId,
+                amounT,
+                payMaster.address,
+                ethers.encodeBytes32String("6"),
+                signature,
+                expirationTime,
+            )
+            const blockTime = (await ethers.provider.getBlock(tx?.blockNumber))?.timestamp;
+            await expect(tx).to.emit(nodeReward, "Claimed").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, ethers.encodeBytes32String("6"), blockTime);
+
+            const withDrawTypes = {
+                Withdraw: [{ name: "withdrawn", type: "uint256" }, { name: "token_id", type: "uint256" }, { name: "amount", type: "uint256" }, { name: "sender", type: "address" }, { name: "expiration_time", type: "uint64" }, { name: "reference_id", type: "bytes32" }],
+            };
+
+            const withDrawSignature = await payMaster.signTypedData(domain, withDrawTypes, {
+                withdrawn: "0",
+                token_id: tokenId,
+                amount: amounT,
+                sender: tokenOwner.address,
+                expiration_time: expirationTime,
+                reference_id: ethers.encodeBytes32String("6"),
+            });
+
+            await time.increase(86400 + 1);
+            await ckip.mint(await fundAddress.getAddress(), amounT);
+            await ckip.connect(fundAddress).approve(await nodeReward.getAddress(), amounT);
+            const txWithdraw = await nodeReward.connect(tokenOwner).withdraw(
+                tokenId,
+                amounT,
+                payMaster.address,
+                ethers.encodeBytes32String("6"),
+                withDrawSignature,
+                expirationTime,
+            );
+            const blockTimeWithdraw = (await ethers.provider.getBlock(txWithdraw?.blockNumber))?.timestamp;
+            await expect(txWithdraw).to.emit(nodeReward, "Withdraw").withArgs(tokenOwner.address, tokenId, amounT, payMaster.address, ethers.encodeBytes32String("6"), blockTimeWithdraw);
+        })
     })
 });

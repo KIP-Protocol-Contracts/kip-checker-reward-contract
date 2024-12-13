@@ -1,0 +1,9 @@
+[project]
+name = "kip-checker-reward-contract"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "slither-analyzer>=0.10.4",
+]

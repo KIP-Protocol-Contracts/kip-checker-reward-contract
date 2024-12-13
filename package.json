@@ -1,8 +1,10 @@
 {
   "name": "kip-checker-reward-contract",
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.2"
+    "@openzeppelin/contracts": "^5.0.2",
+    "@openzeppelin/contracts-upgradeable": "^5.1.0"
   },
+  "license": "UNLICENSED",
   "devDependencies": {
     "@atixlabs/hardhat-time-n-mine": "^0.0.5",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.6",
@@ -31,5 +33,13 @@
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
     "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "prettier": "prettier . --write **/*.sol **/**/*.sol",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "coverage": "hardhat coverage",
+    "arb_test": "hardhat run --network arb_test",
+    "base_test": "hardhat run --network base_test"
   }
 }
