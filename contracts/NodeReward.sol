@@ -106,7 +106,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         emit FundAddressChanged(_msgSender(), _address);
     }
 
-    function claim(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) external whenNotPaused {
+    function claim(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) public whenNotPaused {
         if (amount == 0) revert AmountIsZero();
         if (paymaster[_paymaster] == false) revert InvalidPayMaster();
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
@@ -127,7 +127,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         emit Claimed(_msgSender(), tokenId, amount, _paymaster, referenceId, amountT);
     }
 
-    function withdraw(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) external whenNotPaused {
+    function withdraw(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) public whenNotPaused {
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
         if (treasurer[_paymaster] == false) revert InvalidTreasurer();
         if (expiration_time < block.timestamp) revert ExpiredSignature();
@@ -212,6 +212,50 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
 
         for (uint256 i = 0; i < tokenIds.length; i++) {
             setDelegation(tokenIds[i], slots[i], addresses[i]);
+        }
+    }
+
+    struct ClaimParams {
+        uint256 tokenId;
+        uint256 amount;
+        address paymaster;
+        bytes32 referenceId;
+        bytes signature;
+        uint64 expiration_time;
+    }
+
+    function batchClaim(ClaimParams[] calldata claims) external {
+        for (uint256 i = 0; i < claims.length; i++) {
+            claim(
+                claims[i].tokenId,
+                claims[i].amount,
+                claims[i].paymaster,
+                claims[i].referenceId,
+                claims[i].signature,
+                claims[i].expiration_time
+            );
+        }
+    }
+
+    struct WithdrawParams {
+        uint256 tokenId;
+        uint256 amount;
+        address paymaster;
+        bytes32 referenceId;
+        bytes signature;
+        uint64 expiration_time;
+    }
+
+    function batchWithdraw(WithdrawParams[] calldata withdrawals) external {
+        for (uint256 i = 0; i < withdrawals.length; i++) {
+            withdraw(
+                withdrawals[i].tokenId,
+                withdrawals[i].amount,
+                withdrawals[i].paymaster,
+                withdrawals[i].referenceId,
+                withdrawals[i].signature,
+                withdrawals[i].expiration_time
+            );
         }
     }
 
