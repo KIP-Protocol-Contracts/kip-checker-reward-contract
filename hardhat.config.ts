@@ -1,4 +1,5 @@
 import { HardhatUserConfig } from "hardhat/config";
+import "@openzeppelin/hardhat-upgrades";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomiclabs/hardhat-solhint";
 import "@typechain/hardhat";
@@ -9,59 +10,28 @@ dotenv.config();
 
 const config: HardhatUserConfig = {
     networks: {
-        arb: {
-            url: process.env.ARBITRUM_MAINNET_PROVIDER || "",
+        mainnet: {
+            url: process.env.MAINNET_RPC || "",
             accounts:
                 process.env.MAINNET_DEPLOYER !== undefined
                     ? [process.env.MAINNET_DEPLOYER]
                     : [],
             timeout: 900000,
-            chainId: 42161,
+            chainId: 1,
         },
-        bsc: {
-            url: process.env.BSC_MAINNET_PROVIDER || "",
-            accounts:
-                process.env.MAINNET_DEPLOYER !== undefined
-                    ? [process.env.MAINNET_DEPLOYER]
-                    : [],
-            timeout: 900000,
-            chainId: 56,
-        },
-        matic: {
-            url: process.env.POLYGON_PROVIDER || "",
-            accounts:
-                process.env.MAINNET_DEPLOYER !== undefined
-                    ? [process.env.MAINNET_DEPLOYER]
-                    : [],
-            timeout: 1200000, //   20 mins
-            chainId: 137,
-        },
-        arb_test: {
-            url: process.env.ARBITRUM_TESTNET_PROVIDER || "",
+        sepolia: {
+            url: process.env.SEPOLIA_RPC || "",
             accounts:
                 process.env.TESTNET_DEPLOYER !== undefined
                     ? [process.env.TESTNET_DEPLOYER]
                     : [],
-            timeout: 900000,
-            chainId: 421614,
         },
-        bsc_test: {
-            url: process.env.BSC_TESTNET_PROVIDER || "",
+        arbitrumSepolia: {
+            url: process.env.ARB_TESTNET_RPC || "",
             accounts:
                 process.env.TESTNET_DEPLOYER !== undefined
                     ? [process.env.TESTNET_DEPLOYER]
                     : [],
-            timeout: 20000,
-            chainId: 97,
-        },
-        mumbai: {
-            url: process.env.MUMBAI_PROVIDER || "",
-            accounts:
-                process.env.MAINNET_DEPLOYER !== undefined
-                    ? [process.env.MAINNET_DEPLOYER]
-                    : [],
-            timeout: 1200000, //   20 mins
-            chainId: 80001,
         },
     },
 
@@ -85,17 +55,30 @@ const config: HardhatUserConfig = {
     },
 
     etherscan: {
-        apiKey: process.env.ARBITRUM_API_KEY,
+        apiKey: {
+            arbitrumSepolia: process.env.ARB_API_KEY,
+        },
+
         customChains: [
+            // blockscout
+            // {
+            //     network: "arbitrumSepolia",
+            //     chainId: 421614,
+            //     urls: {
+            //         apiURL: "https://arbitrum-sepolia.blockscout.com/api",
+            //         browserURL: "https://arbitrum-sepolia.blockscout.com",
+            //     }
+            // },
+            // arbiscan
             {
-                network: "Arbitrum Testnet",
+                network: "arbitrumSepolia",
                 chainId: 421614,
                 urls: {
                     apiURL: "https://api-sepolia.arbiscan.io/api",
-                    browserURL: "https://sepolia.arbiscan.io/",
-                },
-            },
-        ],
+                    browserURL: "https://sepolia.arbiscan.io",
+                }
+            }
+        ]
     },
 };
 

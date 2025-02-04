@@ -20,9 +20,8 @@ error InvalidSignature();
 error CanNotWithdrawYet01();
 error CanNotWithdrawYet02();
 error InvalidAmount();
-error ArrayLengthsError();
 
-contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, PausableUpgradeable {
+contract NodeRewardV2Test is Initializable, OwnableUpgradeable, UUPSUpgradeable, PausableUpgradeable {
     using ECDSA for bytes32;
     using SafeERC20 for IERC20;
     // using MessageHashUtils for bytes32;
@@ -34,7 +33,9 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
     uint40 public CLAIM_INTERVAL;
 
     bytes32 public DOMAIN_SEPARATOR;
+    // 6dc7908c73454287a1ea5818cabdf99f39460a1624034acb20bc177a32970dd4
     bytes32 public constant CLAIM_HASH = keccak256("Claim(uint256 claimed,uint256 token_id,uint256 amount,address sender,uint64 expiration_time,bytes32 reference_id)");
+    // 9886c4dc768744e8fa1a61dddb7049ff4846914c1822d360c892f3c6e3d92e45
     bytes32 public constant WITHDRAW_HASH = keccak256("Withdraw(uint256 withdrawn,uint256 token_id,uint256 amount,address sender,uint64 expiration_time,bytes32 reference_id)");
 
     mapping(address => bool) public paymaster;
@@ -42,7 +43,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
     mapping(address => bool) public treasurer;
     mapping(uint256 => uint256) public lastWithdrawTime;
     mapping(uint256 => uint256) public lastClaimTime;
-    mapping(uint256 => uint256) public fines;
+    mapping(uint256 => uint256) public slashedAmounts; // rename
     mapping(uint256 => uint256) public claimedAmounts;
     mapping(uint256 => uint256) public withdrawAmounts;
     mapping(uint256 => mapping(uint256 => address)) public delegations;
@@ -54,9 +55,9 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
     event WithdrawIntervalChanged(address indexed operator, uint40 newInterval);
     event ClaimIntervalChanged(address indexed operator, uint40 newInterval);
     event DelegationChanged(address indexed tokenOwner, uint256 tokenId, uint256 slot, address indexed delegation);
-    event Claimed(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId, uint256 amountT);
-    event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId, uint256 amountT);
-    event Penalty(address indexed paymaster, uint256 tokenId, uint256 amount, bytes32 referenceId, uint256 amountT);
+    event Claimed(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId, uint256 block_timestamp);
+    event Withdraw(address indexed tokenOwner, uint256 tokenId, uint256 amount, address indexed paymaster, bytes32 referenceId, uint256 block_timestamp);
+    event Penalty(address indexed paymaster, uint256 tokenId, uint256 amount, bytes32 referenceId);
     
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -96,7 +97,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         return delegations[tokenId][slot];
     }
 
-    function setDelegation(uint256 tokenId, uint256 slot, address _address) public {
+    function setDelegation(uint256 tokenId, uint256 slot, address _address) external {
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
         delegations[tokenId][slot] = _address;
         emit DelegationChanged(_msgSender(), tokenId, slot, _address);
@@ -123,9 +124,9 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         address recoveredAddress = digest.recover(signature);
         if (recoveredAddress != _paymaster) revert InvalidSignature();
         
-        uint256 amountT = claimedAmounts[tokenId] += amount;
+        claimedAmounts[tokenId] += amount;
         lastClaimTime[tokenId] = block.timestamp;
-        emit Claimed(_msgSender(), tokenId, amount, _paymaster, referenceId, amountT);
+        emit Claimed(_msgSender(), tokenId, amount, _paymaster, referenceId, block.timestamp);
     }
 
     function withdraw(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) external whenNotPaused {
@@ -139,7 +140,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
             }
         }
 
-        if (claimedAmounts[tokenId]-fines[tokenId] < withdrawAmounts[tokenId]+amount) {
+        if (claimedAmounts[tokenId]-slashedAmounts[tokenId] < withdrawAmounts[tokenId]+amount) {
             revert InvalidAmount();
         }
 
@@ -156,19 +157,21 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         );
         address recoveredAddress = digest.recover(signature);
         if (recoveredAddress != _paymaster) revert InvalidSignature();
+        IERC20(cKIP).safeTransferFrom(fundAddress, _msgSender(), amount);
         
         lastWithdrawTime[tokenId] = block.timestamp;
-        uint256 amountT = withdrawAmounts[tokenId] += amount;
-        emit Withdraw(_msgSender(), tokenId, amount, _paymaster, referenceId, amountT);
-        IERC20(cKIP).safeTransferFrom(fundAddress, _msgSender(), amount);
+        withdrawAmounts[tokenId] += amount;
+        
+        emit Withdraw(_msgSender(), tokenId, amount, _paymaster, referenceId, block.timestamp);
+        // require(cKIP.transferFrom(fundAddress, _msgSender(), amount), "Transfer failed");
     }
 
     function penalty(uint256 tokenId, uint256 amount, bytes32 referenceId) external {
         if (amount == 0) revert AmountIsZero();
         if (auditor[_msgSender()] == false) revert InvalidAuditor();
 
-        fines[tokenId] += amount;
-        emit Penalty(_msgSender(), tokenId, amount, referenceId, fines[tokenId]);
+        slashedAmouathedAmounts[tokenId] += amount;
+        emit Penalty(_msgSender(), tokenId, amount, referenceId);
     }
 
     function setWithdrawInterval(uint40 interval) external onlyOwner {
@@ -203,17 +206,4 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
     function unpause() public onlyOwner {
         _unpause();
     }
-
-    function batchSetDelegation(
-        uint256[] calldata tokenIds,
-        uint256[] calldata slots,
-        address[] calldata addresses
-    ) external {
-        if (tokenIds.length != slots.length || tokenIds.length != addresses.length) revert ArrayLengthsError();
-
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            setDelegation(tokenIds[i], slots[i], addresses[i]);
-        }
-    }
-
 }
