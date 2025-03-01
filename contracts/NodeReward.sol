@@ -107,7 +107,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         emit FundAddressChanged(_msgSender(), _address);
     }
 
-    function claim(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) external whenNotPaused {
+    function claim(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) public whenNotPaused {
         if (amount == 0) revert AmountIsZero();
         if (paymaster[_paymaster] == false) revert InvalidPayMaster();
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
@@ -128,7 +128,7 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         emit Claimed(_msgSender(), tokenId, amount, _paymaster, referenceId, amountT);
     }
 
-    function withdraw(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) external whenNotPaused {
+    function withdraw(uint256 tokenId, uint256 amount, address _paymaster, bytes32 referenceId, bytes calldata signature, uint64 expiration_time) public whenNotPaused {
         if (kipNode.ownerOf(tokenId) != _msgSender()) revert InvalidTokenOwner();
         if (treasurer[_paymaster] == false) revert InvalidTreasurer();
         if (expiration_time < block.timestamp) revert ExpiredSignature();
