@@ -216,4 +216,47 @@ contract NodeReward is Initializable, OwnableUpgradeable, UUPSUpgradeable, Pausa
         }
     }
 
+    struct ClaimParams {
+        uint256 tokenId;
+        uint256 amount;
+        address paymaster;
+        bytes32 referenceId;
+        bytes signature;
+        uint64 expiration_time;
+    }
+
+    function batchClaim(ClaimParams[] calldata claims) external {
+        for (uint256 i = 0; i < claims.length; i++) {
+            claim(
+                claims[i].tokenId,
+                claims[i].amount,
+                claims[i].paymaster,
+                claims[i].referenceId,
+                claims[i].signature,
+                claims[i].expiration_time
+            );
+        }
+    }
+
+    struct WithdrawParams {
+        uint256 tokenId;
+        uint256 amount;
+        address paymaster;
+        bytes32 referenceId;
+        bytes signature;
+        uint64 expiration_time;
+    }
+
+    function batchWithdraw(WithdrawParams[] calldata withdrawals) external {
+        for (uint256 i = 0; i < withdrawals.length; i++) {
+            withdraw(
+                withdrawals[i].tokenId,
+                withdrawals[i].amount,
+                withdrawals[i].paymaster,
+                withdrawals[i].referenceId,
+                withdrawals[i].signature,
+                withdrawals[i].expiration_time
+            );
+        }
+    }
 }
